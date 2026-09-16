@@ -2,6 +2,7 @@
 
 ## Deskripsi
 Proyek Flutter untuk praktikum Pemrograman Berbasis Mobile.
+Aplikasi pembelajaran pemrograman mobile untuk mahasiswa.
 
 ## Tujuan
 
