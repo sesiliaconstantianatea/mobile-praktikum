@@ -1,7 +1,7 @@
 # Proyek Pemrograman Mobile
 
 ## Deskripsi
-Aplikasi Flutter latihan untuk pembelajaran pemrograman berbasis mobile.
+Aplikasi pembelajaran pemrograman mobile untuk mahasiswa.
 
 ## Tujuan
 
