@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'course_provider.dart';
-import 'models/course.dart';
 import 'repositories/course_repository.dart';
 import 'services/course_service.dart';
 
@@ -11,7 +10,9 @@ const String studentId = '2415051112';
 void main() {
   runApp(
     ChangeNotifierProvider(
-      create: (_) => CourseProvider(),
+      create: (_) => CourseProvider(
+        CourseRepository(CourseService()),
+      )..loadCourses(),
       child: const MyApp(),
     ),
   );
@@ -30,34 +31,13 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class HomePage extends StatefulWidget {
+class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-  // UI hanya mengenal repository, bukan service/rootBundle
-  final CourseRepository _repository = CourseRepository(CourseService());
-  List<Course> _courses = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    final result = await _repository.getCourses();
-    debugPrint('Repository mengembalikan ${result.length} course: '
-        '${result.map((c) => c.code).toList()}');
-    if (!mounted) return;
-    setState(() => _courses = result);
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final provider = context.watch<CourseProvider>();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Course Explorer'),
@@ -69,52 +49,74 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ),
-      body: Column(
-        children: [
-          const FavoriteCounter(),
-          Expanded(
-            child: ListView.builder(
-              itemCount: _courses.length,
-              itemBuilder: (context, index) {
-                final course = _courses[index];
-                return ListTile(
-                  title: Text(course.title),
-                  subtitle: Text(
-                    '${course.code} • ${course.credits} SKS • ${course.status}',
-                  ),
-                  trailing: Consumer<CourseProvider>(
-                    builder: (context, provider, child) {
-                      final isFav = provider.favorites.contains(course.code);
-                      return IconButton(
-                        icon: Icon(
-                          isFav ? Icons.favorite : Icons.favorite_border,
-                          color: isFav ? Colors.red : null,
-                        ),
-                        onPressed: () => context
-                            .read<CourseProvider>()
-                            .toggleFavorite(course.code),
-                      );
-                    },
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
+      body: _buildBody(context, provider),
     );
   }
-}
 
-class FavoriteCounter extends StatelessWidget {
-  const FavoriteCounter({super.key});
+  Widget _buildBody(BuildContext context, CourseProvider provider) {
+    // 1. Loading
+    if (provider.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-  @override
-  Widget build(BuildContext context) {
-    final total = context.watch<CourseProvider>().favorites.length;
-    return Padding(
-      padding: const EdgeInsets.all(12),
-      child: Text('Jumlah favorite: $total'),
+    // 2. Error
+    if (provider.error != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.error_outline, color: Colors.red, size: 48),
+              const SizedBox(height: 12),
+              Text(
+                'Terjadi kesalahan:\n${provider.error}',
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: () =>
+                    context.read<CourseProvider>().loadCourses(),
+                child: const Text('Coba lagi'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // 3. Success
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(12),
+          child: Text('Jumlah favorite: ${provider.favorites.length}'),
+        ),
+        Expanded(
+          child: ListView.builder(
+            itemCount: provider.courses.length,
+            itemBuilder: (context, index) {
+              final course = provider.courses[index];
+              final isFav = provider.favorites.contains(course.code);
+              return ListTile(
+                title: Text(course.title),
+                subtitle: Text(
+                  '${course.code} • ${course.credits} SKS • ${course.status}',
+                ),
+                trailing: IconButton(
+                  icon: Icon(
+                    isFav ? Icons.favorite : Icons.favorite_border,
+                    color: isFav ? Colors.red : null,
+                  ),
+                  onPressed: () => context
+                      .read<CourseProvider>()
+                      .toggleFavorite(course.code),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }
