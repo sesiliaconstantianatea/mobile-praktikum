@@ -7,6 +7,32 @@ void main() {
   runApp(const MyApp());
 }
 
+// ===============================
+// CHANGE NOTIFIER
+// ===============================
+
+class CourseState extends ChangeNotifier {
+  final Set<String> favorites = {};
+
+  void toggleFavorite(String courseCode) {
+    if (favorites.contains(courseCode)) {
+      favorites.remove(courseCode);
+    } else {
+      favorites.add(courseCode);
+    }
+
+    notifyListeners();
+  }
+
+  bool isFavorite(String courseCode) {
+    return favorites.contains(courseCode);
+  }
+}
+
+// ===============================
+// APP
+// ===============================
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -14,155 +40,132 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Course Explorer',
+      title: 'ChangeNotifier Demo',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.blue,
         ),
         useMaterial3: true,
       ),
-      home: const CourseListPage(),
+      home: const ChangeNotifierDemoPage(),
     );
   }
 }
 
-class CourseListPage extends StatelessWidget {
-  const CourseListPage({super.key});
+// ===============================
+// SCREEN
+// ===============================
+
+class ChangeNotifierDemoPage extends StatefulWidget {
+  const ChangeNotifierDemoPage({super.key});
+
+  @override
+  State<ChangeNotifierDemoPage> createState() =>
+      _ChangeNotifierDemoPageState();
+}
+
+class _ChangeNotifierDemoPageState
+    extends State<ChangeNotifierDemoPage> {
+  final CourseState courseState = CourseState();
+
+  @override
+  void initState() {
+    super.initState();
+
+    courseState.addListener(_updateUI);
+  }
+
+  void _updateUI() {
+    setState(() {});
+  }
+
+  @override
+  void dispose() {
+    courseState.removeListener(_updateUI);
+    courseState.dispose();
+
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    // ValueNotifier menyimpan state sederhana.
-    final ValueNotifier<bool> isFavorite =
-        ValueNotifier<bool>(false);
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Course Explorer'),
+        title: const Text('ChangeNotifier Demo'),
       ),
-      body: Column(
-        children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            color: Colors.blue.shade50,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  studentName,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text('NIM: $studentId'),
-              ],
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              studentName,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
 
-          const SizedBox(height: 20),
+            Text('NIM: $studentId'),
 
-          ValueListenableBuilder<bool>(
-            valueListenable: isFavorite,
-            builder: (
-              context,
-              favorite,
-              child,
-            ) {
-              return Column(
-                children: [
-                  Text(
-                    favorite
-                        ? 'Course Favorite'
-                        : 'Course Belum Favorite',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+            const SizedBox(height: 30),
 
-                  const SizedBox(height: 10),
-
-                  IconButton(
-                    iconSize: 50,
-                    icon: Icon(
-                      favorite
-                          ? Icons.favorite
-                          : Icons.favorite_border,
-                    ),
-                    onPressed: () {
-                      isFavorite.value = !isFavorite.value;
-                    },
-                  ),
-
-                  Text(
-                    favorite
-                        ? 'Favorite: Ya'
-                        : 'Favorite: Tidak',
-                  ),
-                ],
-              );
-            },
-          ),
-
-          const Divider(),
-
-          Expanded(
-            child: ListView(
-              children: const [
-                CourseCard(
-                  code: 'IF101',
-                  name: 'Pemrograman Dasar',
-                  description:
-                      'Belajar dasar pemrograman.',
-                ),
-                CourseCard(
-                  code: 'IF102',
-                  name: 'Pemrograman Mobile',
-                  description:
-                      'Belajar pengembangan aplikasi mobile.',
-                ),
-                CourseCard(
-                  code: 'IF103',
-                  name: 'Basis Data',
-                  description:
-                      'Belajar konsep dan pengelolaan basis data.',
-                ),
-              ],
+            const Text(
+              'State Management',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
-        ],
+
+            const SizedBox(height: 10),
+
+            Text(
+              'Jumlah Favorite: '
+              '${courseState.favorites.length}',
+            ),
+
+            const SizedBox(height: 20),
+
+            _buildCourse(
+              'IF101',
+              'Pemrograman Dasar',
+            ),
+
+            _buildCourse(
+              'IF102',
+              'Pemrograman Mobile',
+            ),
+
+            _buildCourse(
+              'IF103',
+              'Basis Data',
+            ),
+          ],
+        ),
       ),
     );
   }
-}
 
-class CourseCard extends StatelessWidget {
-  final String code;
-  final String name;
-  final String description;
+  Widget _buildCourse(
+    String code,
+    String name,
+  ) {
+    final favorite = courseState.isFavorite(code);
 
-  const CourseCard({
-    super.key,
-    required this.code,
-    required this.name,
-    required this.description,
-  });
-
-  @override
-  Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 8,
-      ),
       child: ListTile(
-        title: Text(
-          '$code - $name',
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
+        title: Text('$code - $name'),
+        trailing: IconButton(
+          icon: Icon(
+            favorite
+                ? Icons.favorite
+                : Icons.favorite_border,
           ),
+          onPressed: () {
+            courseState.toggleFavorite(code);
+          },
         ),
-        subtitle: Text(description),
       ),
     );
   }
