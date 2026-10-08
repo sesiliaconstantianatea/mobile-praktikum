@@ -38,7 +38,8 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<CourseProvider>();
+    // Tidak ada watch() di sini, jadi halaman ini tidak ikut rebuild
+    debugPrint('HomePage build');
 
     return Scaffold(
       appBar: AppBar(
@@ -53,21 +54,29 @@ class HomePage extends StatelessWidget {
       ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Text('Jumlah favorite: ${provider.favorites.length}'),
-          ),
+          const FavoriteCounter(),
           Expanded(
             child: ListView(
               children: courses.map((c) {
-                final isFav = provider.favorites.contains(c['code']);
                 return ListTile(
                   title: Text(c['title']!),
                   subtitle: Text(c['code']!),
-                  trailing: IconButton(
-                    icon: Icon(isFav ? Icons.favorite : Icons.favorite_border),
-                    onPressed: () =>
-                        context.read<CourseProvider>().toggleFavorite(c['code']!),
+                  // Consumer: hanya area ikon ini yang rebuild
+                  trailing: Consumer<CourseProvider>(
+                    builder: (context, provider, child) {
+                      debugPrint('Consumer ikon ${c['code']} build');
+                      final isFav = provider.favorites.contains(c['code']);
+                      return IconButton(
+                        icon: Icon(
+                          isFav ? Icons.favorite : Icons.favorite_border,
+                          color: isFav ? Colors.red : null,
+                        ),
+                        // read(): hanya memanggil aksi, tanpa listen
+                        onPressed: () => context
+                            .read<CourseProvider>()
+                            .toggleFavorite(c['code']!),
+                      );
+                    },
                   ),
                 );
               }).toList(),
@@ -75,6 +84,22 @@ class HomePage extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class FavoriteCounter extends StatelessWidget {
+  const FavoriteCounter({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    // watch(): listen perubahan dan rebuild widget ini
+    final total = context.watch<CourseProvider>().favorites.length;
+    debugPrint('FavoriteCounter build');
+
+    return Padding(
+      padding: const EdgeInsets.all(12),
+      child: Text('Jumlah favorite: $total'),
     );
   }
 }
