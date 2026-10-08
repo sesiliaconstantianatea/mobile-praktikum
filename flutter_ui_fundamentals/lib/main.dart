@@ -16,7 +16,9 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Course Explorer',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.blue,
+        ),
         useMaterial3: true,
       ),
       home: const CourseListPage(),
@@ -50,6 +52,7 @@ class _CourseListPageState extends State<CourseListPage> {
     },
   ];
 
+  // SINGLE SOURCE OF TRUTH
   final Set<String> favoriteCourses = {};
 
   void toggleFavorite(String courseCode) {
@@ -86,7 +89,7 @@ class _CourseListPageState extends State<CourseListPage> {
                 Text('NIM: $studentId'),
                 const SizedBox(height: 8),
                 Text(
-                  'Favorite: ${favoriteCourses.length} course',
+                  'Total Favorite: ${favoriteCourses.length}',
                 ),
               ],
             ),
@@ -97,11 +100,13 @@ class _CourseListPageState extends State<CourseListPage> {
               itemCount: courses.length,
               itemBuilder: (context, index) {
                 final course = courses[index];
+
                 final code = course['code']!;
                 final name = course['name']!;
                 final description = course['description']!;
 
-                final isFavorite = favoriteCourses.contains(code);
+                final isFavorite =
+                    favoriteCourses.contains(code);
 
                 return CourseCard(
                   code: code,
@@ -115,11 +120,13 @@ class _CourseListPageState extends State<CourseListPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => CourseDetailPage(
-                          code: code,
-                          name: name,
-                          description: description,
-                        ),
+                        builder: (context) {
+                          return CourseDetailPage(
+                            code: code,
+                            name: name,
+                            description: description,
+                          );
+                        },
                       ),
                     );
                   },
@@ -137,8 +144,13 @@ class CourseCard extends StatelessWidget {
   final String code;
   final String name;
   final String description;
+
+  // Data berasal dari parent
   final bool isFavorite;
+
+  // Callback dikirim dari parent
   final VoidCallback onFavoriteChanged;
+
   final VoidCallback onDetail;
 
   const CourseCard({
@@ -205,12 +217,16 @@ class CourseDetailPage extends StatelessWidget {
           children: [
             Text(
               code,
-              style: Theme.of(context).textTheme.headlineSmall,
+              style: Theme.of(context)
+                  .textTheme
+                  .headlineSmall,
             ),
             const SizedBox(height: 8),
             Text(
               name,
-              style: Theme.of(context).textTheme.titleLarge,
+              style: Theme.of(context)
+                  .textTheme
+                  .titleLarge,
             ),
             const SizedBox(height: 16),
             Text(description),
