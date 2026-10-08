@@ -11,9 +11,29 @@ class CourseProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _error;
 
+  // Shared State: Favorites
+  final Set<String> _favoriteCodes = {};
+
   List<Course> get courses => _courses;
   bool get isLoading => _isLoading;
   String? get error => _error;
+
+  // Getter untuk mengambil daftar objek course favorit
+  List<Course> get favoriteCourses =>
+      _courses.where((course) => _favoriteCodes.contains(course.code)).toList();
+
+  int get favoriteCount => _favoriteCodes.length;
+
+  bool isFavorite(String code) => _favoriteCodes.contains(code);
+
+  void toggleFavorite(String code) {
+    if (_favoriteCodes.contains(code)) {
+      _favoriteCodes.remove(code);
+    } else {
+      _favoriteCodes.add(code);
+    }
+    notifyListeners(); // Memberi tahu semua widget listener
+  }
 
   Future<void> loadCourses() async {
     _isLoading = true;
