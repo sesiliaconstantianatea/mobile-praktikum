@@ -26,47 +26,15 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class CourseListPage extends StatefulWidget {
+class CourseListPage extends StatelessWidget {
   const CourseListPage({super.key});
 
   @override
-  State<CourseListPage> createState() => _CourseListPageState();
-}
-
-class _CourseListPageState extends State<CourseListPage> {
-  final List<Map<String, String>> courses = [
-    {
-      'code': 'IF101',
-      'name': 'Pemrograman Dasar',
-      'description': 'Belajar dasar pemrograman.',
-    },
-    {
-      'code': 'IF102',
-      'name': 'Pemrograman Mobile',
-      'description': 'Belajar pengembangan aplikasi mobile.',
-    },
-    {
-      'code': 'IF103',
-      'name': 'Basis Data',
-      'description': 'Belajar konsep dan pengelolaan basis data.',
-    },
-  ];
-
-  // SINGLE SOURCE OF TRUTH
-  final Set<String> favoriteCourses = {};
-
-  void toggleFavorite(String courseCode) {
-    setState(() {
-      if (favoriteCourses.contains(courseCode)) {
-        favoriteCourses.remove(courseCode);
-      } else {
-        favoriteCourses.add(courseCode);
-      }
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
+    // ValueNotifier menyimpan state sederhana.
+    final ValueNotifier<bool> isFavorite =
+        ValueNotifier<bool>(false);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Course Explorer'),
@@ -87,51 +55,79 @@ class _CourseListPageState extends State<CourseListPage> {
                   ),
                 ),
                 Text('NIM: $studentId'),
-                const SizedBox(height: 8),
-                Text(
-                  'Total Favorite: ${favoriteCourses.length}',
-                ),
               ],
             ),
           ),
 
+          const SizedBox(height: 20),
+
+          ValueListenableBuilder<bool>(
+            valueListenable: isFavorite,
+            builder: (
+              context,
+              favorite,
+              child,
+            ) {
+              return Column(
+                children: [
+                  Text(
+                    favorite
+                        ? 'Course Favorite'
+                        : 'Course Belum Favorite',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  IconButton(
+                    iconSize: 50,
+                    icon: Icon(
+                      favorite
+                          ? Icons.favorite
+                          : Icons.favorite_border,
+                    ),
+                    onPressed: () {
+                      isFavorite.value = !isFavorite.value;
+                    },
+                  ),
+
+                  Text(
+                    favorite
+                        ? 'Favorite: Ya'
+                        : 'Favorite: Tidak',
+                  ),
+                ],
+              );
+            },
+          ),
+
+          const Divider(),
+
           Expanded(
-            child: ListView.builder(
-              itemCount: courses.length,
-              itemBuilder: (context, index) {
-                final course = courses[index];
-
-                final code = course['code']!;
-                final name = course['name']!;
-                final description = course['description']!;
-
-                final isFavorite =
-                    favoriteCourses.contains(code);
-
-                return CourseCard(
-                  code: code,
-                  name: name,
-                  description: description,
-                  isFavorite: isFavorite,
-                  onFavoriteChanged: () {
-                    toggleFavorite(code);
-                  },
-                  onDetail: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) {
-                          return CourseDetailPage(
-                            code: code,
-                            name: name,
-                            description: description,
-                          );
-                        },
-                      ),
-                    );
-                  },
-                );
-              },
+            child: ListView(
+              children: const [
+                CourseCard(
+                  code: 'IF101',
+                  name: 'Pemrograman Dasar',
+                  description:
+                      'Belajar dasar pemrograman.',
+                ),
+                CourseCard(
+                  code: 'IF102',
+                  name: 'Pemrograman Mobile',
+                  description:
+                      'Belajar pengembangan aplikasi mobile.',
+                ),
+                CourseCard(
+                  code: 'IF103',
+                  name: 'Basis Data',
+                  description:
+                      'Belajar konsep dan pengelolaan basis data.',
+                ),
+              ],
             ),
           ),
         ],
@@ -145,22 +141,11 @@ class CourseCard extends StatelessWidget {
   final String name;
   final String description;
 
-  // Data berasal dari parent
-  final bool isFavorite;
-
-  // Callback dikirim dari parent
-  final VoidCallback onFavoriteChanged;
-
-  final VoidCallback onDetail;
-
   const CourseCard({
     super.key,
     required this.code,
     required this.name,
     required this.description,
-    required this.isFavorite,
-    required this.onFavoriteChanged,
-    required this.onDetail,
   });
 
   @override
@@ -178,60 +163,6 @@ class CourseCard extends StatelessWidget {
           ),
         ),
         subtitle: Text(description),
-        trailing: IconButton(
-          icon: Icon(
-            isFavorite
-                ? Icons.favorite
-                : Icons.favorite_border,
-          ),
-          onPressed: onFavoriteChanged,
-        ),
-        onTap: onDetail,
-      ),
-    );
-  }
-}
-
-class CourseDetailPage extends StatelessWidget {
-  final String code;
-  final String name;
-  final String description;
-
-  const CourseDetailPage({
-    super.key,
-    required this.code,
-    required this.name,
-    required this.description,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Course Detail'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              code,
-              style: Theme.of(context)
-                  .textTheme
-                  .headlineSmall,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              name,
-              style: Theme.of(context)
-                  .textTheme
-                  .titleLarge,
-            ),
-            const SizedBox(height: 16),
-            Text(description),
-          ],
-        ),
       ),
     );
   }
