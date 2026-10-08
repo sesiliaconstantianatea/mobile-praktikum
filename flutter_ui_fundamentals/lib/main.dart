@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'course_provider.dart';
 import 'models/course.dart';
+import 'services/course_service.dart';
 
 const String studentName = 'SESILIA CONSTANTIANA TEA';
 const String studentId = '2415051112';
@@ -28,22 +29,34 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
-  // Data JSON sementara (Tahap 9 akan dipindah ke service)
-  static const List<Map<String, dynamic>> rawCourses = [
-    {'code': 'IF101', 'title': 'Pemrograman Mobile', 'credits': 3, 'status': 'Aktif'},
-    {'code': 'IF102', 'title': 'Basis Data', 'credits': 3, 'status': 'Aktif'},
-    {'code': 'IF103', 'title': 'Struktur Data', 'credits': 4, 'status': 'Selesai'},
-  ];
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  final CourseService _service = CourseService();
+  List<Course> _courses = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final result = await _service.loadCourses();
+    // Uji service: lihat hasilnya di terminal
+    debugPrint('Service memuat ${result.length} course: '
+        '${result.map((c) => c.code).toList()}');
+    if (!mounted) return;
+    setState(() => _courses = result);
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Map diubah menjadi object Course lewat Course.fromJson
-    final List<Course> courses =
-        rawCourses.map((json) => Course.fromJson(json)).toList();
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Course Explorer'),
@@ -60,9 +73,9 @@ class HomePage extends StatelessWidget {
           const FavoriteCounter(),
           Expanded(
             child: ListView.builder(
-              itemCount: courses.length,
+              itemCount: _courses.length,
               itemBuilder: (context, index) {
-                final course = courses[index];
+                final course = _courses[index];
                 return ListTile(
                   title: Text(course.title),
                   subtitle: Text(
