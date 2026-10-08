@@ -24,6 +24,7 @@ class _CourseExplorerScreenState extends State<CourseExplorerScreen> {
   @override
   void initState() {
     super.initState();
+    // Kasus D: Penanganan async safe & mounted check saat inisialisasi state
     Future.microtask(() {
       if (mounted) {
         context.read<CourseProvider>().loadCourses();
@@ -35,8 +36,18 @@ class _CourseExplorerScreenState extends State<CourseExplorerScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Course Explorer v2'),
-        elevation: 1,
+        title: const Text('Course Explorer v2 - Debugging State'),
+        actions: [
+          // Simulasi Kasus C: Tombol pengujian simulasi error
+          IconButton(
+            icon: const Icon(Icons.bug_report),
+            tooltip: 'Simulasi Reload Data',
+            onPressed: () {
+              // Menguji siklus loadCourses ulang
+              context.read<CourseProvider>().loadCourses();
+            },
+          ),
+        ],
       ),
       body: _tabs[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
