@@ -16,9 +16,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Course Explorer',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue,
-        ),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
       home: const CourseListPage(),
@@ -34,28 +32,35 @@ class CourseListPage extends StatefulWidget {
 }
 
 class _CourseListPageState extends State<CourseListPage> {
-  bool isFavorite = false;
-
-  final List<Map<String, dynamic>> courses = const [
+  final List<Map<String, String>> courses = [
     {
       'code': 'IF101',
-      'title': 'Pemrograman Mobile',
-      'credits': 3,
-      'status': 'Aktif',
+      'name': 'Pemrograman Dasar',
+      'description': 'Belajar dasar pemrograman.',
     },
     {
       'code': 'IF102',
-      'title': 'Pemrograman Web',
-      'credits': 3,
-      'status': 'Aktif',
+      'name': 'Pemrograman Mobile',
+      'description': 'Belajar pengembangan aplikasi mobile.',
     },
     {
       'code': 'IF103',
-      'title': 'Basis Data',
-      'credits': 3,
-      'status': 'Aktif',
+      'name': 'Basis Data',
+      'description': 'Belajar konsep dan pengelolaan basis data.',
     },
   ];
+
+  final Set<String> favoriteCourses = {};
+
+  void toggleFavorite(String courseCode) {
+    setState(() {
+      if (favoriteCourses.contains(courseCode)) {
+        favoriteCourses.remove(courseCode);
+      } else {
+        favoriteCourses.add(courseCode);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -68,104 +73,56 @@ class _CourseListPageState extends State<CourseListPage> {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
-            child: const Column(
+            color: Colors.blue.shade50,
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Nama:',
-                  style: TextStyle(
+                  studentName,
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Text(studentName),
-                SizedBox(height: 8),
+                Text('NIM: $studentId'),
+                const SizedBox(height: 8),
                 Text(
-                  'NIM:',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(studentId),
-              ],
-            ),
-          ),
-          const Divider(),
-
-          // Contoh Local State
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                const Expanded(
-                  child: Text(
-                    'Favorite lokal:',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                IconButton(
-                  onPressed: () {
-                    setState(() {
-                      isFavorite = !isFavorite;
-                    });
-                  },
-                  icon: Icon(
-                    isFavorite
-                        ? Icons.favorite
-                        : Icons.favorite_border,
-                  ),
-                ),
-                Text(
-                  isFavorite ? 'Favorite' : 'Belum Favorite',
+                  'Favorite: ${favoriteCourses.length} course',
                 ),
               ],
             ),
           ),
-
-          const Divider(),
 
           Expanded(
             child: ListView.builder(
               itemCount: courses.length,
               itemBuilder: (context, index) {
                 final course = courses[index];
+                final code = course['code']!;
+                final name = course['name']!;
+                final description = course['description']!;
 
-                return Card(
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 6,
-                  ),
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      child: Text(
-                        course['code']
-                            .toString()
-                            .substring(2),
-                      ),
-                    ),
-                    title: Text(
-                      course['title'].toString(),
-                    ),
-                    subtitle: Text(
-                      '${course['code']} • '
-                      '${course['credits']} SKS',
-                    ),
-                    trailing: const Icon(
-                      Icons.arrow_forward_ios,
-                    ),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              CourseDetailPage(
-                            course: course,
-                          ),
+                final isFavorite = favoriteCourses.contains(code);
+
+                return CourseCard(
+                  code: code,
+                  name: name,
+                  description: description,
+                  isFavorite: isFavorite,
+                  onFavoriteChanged: () {
+                    toggleFavorite(code);
+                  },
+                  onDetail: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CourseDetailPage(
+                          code: code,
+                          name: name,
+                          description: description,
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                    );
+                  },
                 );
               },
             ),
@@ -176,12 +133,63 @@ class _CourseListPageState extends State<CourseListPage> {
   }
 }
 
+class CourseCard extends StatelessWidget {
+  final String code;
+  final String name;
+  final String description;
+  final bool isFavorite;
+  final VoidCallback onFavoriteChanged;
+  final VoidCallback onDetail;
+
+  const CourseCard({
+    super.key,
+    required this.code,
+    required this.name,
+    required this.description,
+    required this.isFavorite,
+    required this.onFavoriteChanged,
+    required this.onDetail,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 8,
+      ),
+      child: ListTile(
+        title: Text(
+          '$code - $name',
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        subtitle: Text(description),
+        trailing: IconButton(
+          icon: Icon(
+            isFavorite
+                ? Icons.favorite
+                : Icons.favorite_border,
+          ),
+          onPressed: onFavoriteChanged,
+        ),
+        onTap: onDetail,
+      ),
+    );
+  }
+}
+
 class CourseDetailPage extends StatelessWidget {
-  final Map<String, dynamic> course;
+  final String code;
+  final String name;
+  final String description;
 
   const CourseDetailPage({
     super.key,
-    required this.course,
+    required this.code,
+    required this.name,
+    required this.description,
   });
 
   @override
@@ -191,43 +199,21 @@ class CourseDetailPage extends StatelessWidget {
         title: const Text('Course Detail'),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              studentName,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 4),
-            const Text(studentId),
-            const SizedBox(height: 30),
             Text(
-              course['title'].toString(),
-              style: const TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.bold,
-              ),
+              code,
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              name,
+              style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 16),
-            Text(
-              'Kode: ${course['code']}',
-              style: const TextStyle(fontSize: 18),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'SKS: ${course['credits']}',
-              style: const TextStyle(fontSize: 18),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Status: ${course['status']}',
-              style: const TextStyle(fontSize: 18),
-            ),
+            Text(description),
           ],
         ),
       ),
