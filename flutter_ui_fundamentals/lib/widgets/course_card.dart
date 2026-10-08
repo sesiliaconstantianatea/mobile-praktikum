@@ -15,7 +15,6 @@ class CourseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // context.watch untuk memantau status favorit item ini
     final isFav = context.watch<CourseProvider>().isFavorite(course.code);
 
     return Card(
@@ -56,7 +55,6 @@ class CourseCard extends StatelessWidget {
                 color: isFav ? Colors.red : Colors.grey,
               ),
               onPressed: () {
-                // context.read untuk memicu action tanpa listen ulang seluruh widget
                 context.read<CourseProvider>().toggleFavorite(course.code);
               },
             ),
