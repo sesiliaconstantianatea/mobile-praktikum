@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'course_provider.dart';
+import 'models/course.dart';
 
 const String studentName = 'SESILIA CONSTANTIANA TEA';
 const String studentId = '2415051112';
@@ -30,16 +31,18 @@ class MyApp extends StatelessWidget {
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
-  static const List<Map<String, String>> courses = [
-    {'code': 'IF101', 'title': 'Pemrograman Mobile'},
-    {'code': 'IF102', 'title': 'Basis Data'},
-    {'code': 'IF103', 'title': 'Struktur Data'},
+  // Data JSON sementara (Tahap 9 akan dipindah ke service)
+  static const List<Map<String, dynamic>> rawCourses = [
+    {'code': 'IF101', 'title': 'Pemrograman Mobile', 'credits': 3, 'status': 'Aktif'},
+    {'code': 'IF102', 'title': 'Basis Data', 'credits': 3, 'status': 'Aktif'},
+    {'code': 'IF103', 'title': 'Struktur Data', 'credits': 4, 'status': 'Selesai'},
   ];
 
   @override
   Widget build(BuildContext context) {
-    // Tidak ada watch() di sini, jadi halaman ini tidak ikut rebuild
-    debugPrint('HomePage build');
+    // Map diubah menjadi object Course lewat Course.fromJson
+    final List<Course> courses =
+        rawCourses.map((json) => Course.fromJson(json)).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -56,30 +59,31 @@ class HomePage extends StatelessWidget {
         children: [
           const FavoriteCounter(),
           Expanded(
-            child: ListView(
-              children: courses.map((c) {
+            child: ListView.builder(
+              itemCount: courses.length,
+              itemBuilder: (context, index) {
+                final course = courses[index];
                 return ListTile(
-                  title: Text(c['title']!),
-                  subtitle: Text(c['code']!),
-                  // Consumer: hanya area ikon ini yang rebuild
+                  title: Text(course.title),
+                  subtitle: Text(
+                    '${course.code} • ${course.credits} SKS • ${course.status}',
+                  ),
                   trailing: Consumer<CourseProvider>(
                     builder: (context, provider, child) {
-                      debugPrint('Consumer ikon ${c['code']} build');
-                      final isFav = provider.favorites.contains(c['code']);
+                      final isFav = provider.favorites.contains(course.code);
                       return IconButton(
                         icon: Icon(
                           isFav ? Icons.favorite : Icons.favorite_border,
                           color: isFav ? Colors.red : null,
                         ),
-                        // read(): hanya memanggil aksi, tanpa listen
                         onPressed: () => context
                             .read<CourseProvider>()
-                            .toggleFavorite(c['code']!),
+                            .toggleFavorite(course.code),
                       );
                     },
                   ),
                 );
-              }).toList(),
+              },
             ),
           ),
         ],
@@ -93,10 +97,7 @@ class FavoriteCounter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // watch(): listen perubahan dan rebuild widget ini
     final total = context.watch<CourseProvider>().favorites.length;
-    debugPrint('FavoriteCounter build');
-
     return Padding(
       padding: const EdgeInsets.all(12),
       child: Text('Jumlah favorite: $total'),
