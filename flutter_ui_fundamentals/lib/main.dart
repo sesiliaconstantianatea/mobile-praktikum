@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'course_provider.dart';
 import 'models/course.dart';
+import 'repositories/course_repository.dart';
 import 'services/course_service.dart';
 
 const String studentName = 'SESILIA CONSTANTIANA TEA';
@@ -37,7 +38,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final CourseService _service = CourseService();
+  // UI hanya mengenal repository, bukan service/rootBundle
+  final CourseRepository _repository = CourseRepository(CourseService());
   List<Course> _courses = [];
 
   @override
@@ -47,9 +49,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _load() async {
-    final result = await _service.loadCourses();
-    // Uji service: lihat hasilnya di terminal
-    debugPrint('Service memuat ${result.length} course: '
+    final result = await _repository.getCourses();
+    debugPrint('Repository mengembalikan ${result.length} course: '
         '${result.map((c) => c.code).toList()}');
     if (!mounted) return;
     setState(() => _courses = result);
