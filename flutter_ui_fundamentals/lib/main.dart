@@ -1,12 +1,16 @@
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'services/course_service.dart';
+import 'services/course_api_service.dart';
 import 'repositories/course_repository.dart';
 import 'providers/course_provider.dart';
 import 'screens/course_explorer_screen.dart';
 
+
 void main() {
-  final courseService = CourseService();
+  final courseService = CourseApiService(
+  'https://jsonplaceholder.typicode.com',
+  );
   final courseRepository = CourseRepository(courseService);
 
   runApp(
