@@ -61,3 +61,12 @@ JSONPlaceholder merupakan API dummy untuk latihan. Operasi penulisan data disimu
 
 Screenshot respons endpoint disimpan sebagai bukti pengujian API pada Tahap 1.
 Hasil pengujian: Endpoint GET /posts/1 berhasil mengembalikan data JSON dengan status HTTP 200.
+
+### Tahap 2 — HTTP GET
+
+- Endpoint: `https://jsonplaceholder.typicode.com/posts/1`
+- Method: `GET`
+- Package: `http`
+- Hasil: Berhasil mengambil respons JSON dari API.
+- Data yang ditampilkan: `id`, `title`, dan `body`.
+- Penanganan status: Data diproses saat status HTTP `200`; selain itu, service melempar exception.
