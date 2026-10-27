@@ -18,6 +18,7 @@ class HomeTab extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+           
             // Banner Identitas Mahasiswa
             Card(
               color: Colors.blue.shade50,
@@ -26,19 +27,30 @@ class HomeTab extends StatelessWidget {
                 padding: const EdgeInsets.all(16.0),
                 child: Row(
                   children: const [
-                    Icon(Icons.person_pin, size: 28, color: Colors.blue),
+                    Icon(
+                      Icons.person_pin,
+                      size: 28,
+                      color: Colors.blue,
+                    ),
                     SizedBox(width: 12),
-                    Text(
-                      '$studentId • $studentName',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                    Expanded(
+                      child: Text(
+                        '$studentId • $studentName',
+                        softWrap: true,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
             ),
+            const SizedBox(height: 12),
+            // Stat Metrics Card
+
+
             const SizedBox(height: 12),
             // Stat Metrics Card
             Row(
