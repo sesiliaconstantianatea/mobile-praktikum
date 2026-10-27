@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/course_provider.dart';
@@ -9,10 +10,12 @@ class CourseExplorerScreen extends StatefulWidget {
   const CourseExplorerScreen({super.key});
 
   @override
-  State<CourseExplorerScreen> createState() => _CourseExplorerScreenState();
+  State<CourseExplorerScreen> createState() =>
+      _CourseExplorerScreenState();
 }
 
-class _CourseExplorerScreenState extends State<CourseExplorerScreen> {
+class _CourseExplorerScreenState
+    extends State<CourseExplorerScreen> {
   int _selectedIndex = 0;
 
   final List<Widget> _tabs = const [
@@ -24,7 +27,7 @@ class _CourseExplorerScreenState extends State<CourseExplorerScreen> {
   @override
   void initState() {
     super.initState();
-    // Kasus D: Penanganan async safe & mounted check saat inisialisasi state
+
     Future.microtask(() {
       if (mounted) {
         context.read<CourseProvider>().loadCourses();
@@ -34,44 +37,78 @@ class _CourseExplorerScreenState extends State<CourseExplorerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isWide = MediaQuery.sizeOf(context).width >= 600;
+
+    const destinations = [
+      NavigationDestination(
+        icon: Icon(Icons.home),
+        label: 'Home',
+      ),
+      NavigationDestination(
+        icon: Icon(Icons.book),
+        label: 'Courses',
+      ),
+      NavigationDestination(
+        icon: Icon(Icons.favorite),
+        label: 'Favorites',
+      ),
+    ];
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Course Explorer v2 - Debugging State'),
+        title: const Text('Course Explorer v2'),
         actions: [
-          // Simulasi Kasus C: Tombol pengujian simulasi error
           IconButton(
-            icon: const Icon(Icons.bug_report),
-            tooltip: 'Simulasi Reload Data',
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Reload Data',
             onPressed: () {
-              // Menguji siklus loadCourses ulang
               context.read<CourseProvider>().loadCourses();
             },
           ),
         ],
       ),
-      body: _tabs[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.book),
-            label: 'Courses',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite),
-            label: 'Favorites',
+      body: Row(
+        children: [
+          if (isWide)
+            NavigationRail(
+              selectedIndex: _selectedIndex,
+              labelType: NavigationRailLabelType.all,
+              destinations: const [
+                NavigationRailDestination(
+                  icon: Icon(Icons.home),
+                  label: Text('Home'),
+                ),
+                NavigationRailDestination(
+                  icon: Icon(Icons.book),
+                  label: Text('Courses'),
+                ),
+                NavigationRailDestination(
+                  icon: Icon(Icons.favorite),
+                  label: Text('Favorites'),
+                ),
+              ],
+              onDestinationSelected: (index) {
+                setState(() {
+                  _selectedIndex = index;
+                });
+              },
+            ),
+          Expanded(
+            child: _tabs[_selectedIndex],
           ),
         ],
       ),
+      bottomNavigationBar: isWide
+          ? null
+          : NavigationBar(
+              selectedIndex: _selectedIndex,
+              destinations: destinations,
+              onDestinationSelected: (index) {
+                setState(() {
+                  _selectedIndex = index;
+                });
+              },
+            ),
     );
   }
 }
