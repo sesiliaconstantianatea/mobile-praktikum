@@ -7,12 +7,18 @@ class CourseRepository {
 
   CourseRepository(this.service);
 
+  // GET: Mengambil daftar course
   Future<List<Course>> getCourses() {
     return service.getCourses();
   }
-  
+
+  // POST: Membuat course baru
   Future<Course> createCourse(Course course) {
     return service.createCourse(course);
   }
 
+  // PUT: Memperbarui course
+  Future<Course> updateCourse(Course course) {
+    return service.updateCourse(course);
+  }
 }

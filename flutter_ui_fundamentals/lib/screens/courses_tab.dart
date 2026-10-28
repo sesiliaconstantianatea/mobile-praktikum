@@ -1,7 +1,10 @@
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../providers/course_provider.dart';
 import '../widgets/course_card.dart';
+import 'course_detail_screen.dart';
 
 class CoursesTab extends StatelessWidget {
   const CoursesTab({super.key});
@@ -16,14 +19,29 @@ class CoursesTab extends StatelessWidget {
 
     if (provider.error != null) {
       return Center(
-        child: Text('Error: ${provider.error}', style: const TextStyle(color: Colors.red)),
+        child: Text(
+          'Error: ${provider.error}',
+          style: const TextStyle(color: Colors.red),
+        ),
       );
     }
 
     return ListView.builder(
       itemCount: provider.courses.length,
       itemBuilder: (context, index) {
-        return CourseCard(course: provider.courses[index]);
+        final course = provider.courses[index];
+
+        return CourseCard(
+          course: course,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => CourseDetailScreen(course: course),
+              ),
+            );
+          },
+        );
       },
     );
   }

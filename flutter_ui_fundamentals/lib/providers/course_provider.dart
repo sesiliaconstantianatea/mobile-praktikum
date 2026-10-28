@@ -16,6 +16,7 @@ class CourseProvider extends ChangeNotifier {
 
   final Set<String> _favoriteCodes = {};
 
+  // Getter
   List<Course> get courses => _courses;
   bool get isLoading => _isLoading;
   bool get isSaving => _isSaving;
@@ -26,8 +27,10 @@ class CourseProvider extends ChangeNotifier {
 
   int get favoriteCount => _favoriteCodes.length;
 
+  // Memeriksa apakah course merupakan favorit
   bool isFavorite(String code) => _favoriteCodes.contains(code);
 
+  // Menambah atau menghapus favorit
   void toggleFavorite(String code) {
     if (_favoriteCodes.contains(code)) {
       _favoriteCodes.remove(code);
@@ -38,6 +41,7 @@ class CourseProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // GET: Mengambil daftar course
   Future<void> loadCourses() async {
     _isLoading = true;
     _error = null;
@@ -53,6 +57,7 @@ class CourseProvider extends ChangeNotifier {
     }
   }
 
+  // POST: Membuat course baru
   Future<Course> createCourse(Course course) async {
     _isSaving = true;
     notifyListeners();
@@ -64,6 +69,24 @@ class CourseProvider extends ChangeNotifier {
       await loadCourses();
 
       return createdCourse;
+    } finally {
+      _isSaving = false;
+      notifyListeners();
+    }
+  }
+
+  // PUT: Memperbarui course yang sudah ada
+  Future<Course> updateCourse(Course course) async {
+    _isSaving = true;
+    notifyListeners();
+
+    try {
+      final updatedCourse =
+          await repository.updateCourse(course);
+
+      await loadCourses();
+
+      return updatedCourse;
     } finally {
       _isSaving = false;
       notifyListeners();

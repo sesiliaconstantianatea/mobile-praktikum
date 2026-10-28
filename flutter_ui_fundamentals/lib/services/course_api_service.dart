@@ -9,6 +9,7 @@ class CourseApiService {
 
   CourseApiService(this.baseUrl);
 
+  // GET: Mengambil daftar course
   Future<List<Course>> getCourses() async {
     final response = await http.get(
       Uri.parse('$baseUrl/posts'),
@@ -35,6 +36,7 @@ class CourseApiService {
     }).toList();
   }
 
+  // POST: Membuat course baru
   Future<Course> createCourse(Course course) async {
     final response = await http.post(
       Uri.parse('$baseUrl/posts'),
@@ -60,6 +62,31 @@ class CourseApiService {
 
     throw Exception(
       'Gagal membuat course: ${response.statusCode}',
+    );
+  }
+
+  // PUT: Memperbarui course yang sudah ada
+  Future<Course> updateCourse(Course course) async {
+    if (course.id == null) {
+      throw Exception(
+        'ID course tidak boleh kosong saat mengedit',
+      );
+    }
+
+    final response = await http.put(
+      Uri.parse('$baseUrl/posts/${course.id}'),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(course.toJson()),
+    );
+
+    if (response.statusCode == 200) {
+      return course;
+    }
+
+    throw Exception(
+      'Gagal mengubah course: ${response.statusCode}',
     );
   }
 }
