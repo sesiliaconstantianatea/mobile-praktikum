@@ -10,7 +10,7 @@ import 'screens/course_explorer_screen.dart';
 void main() {
   final courseService = CourseApiService(
   'https://jsonplaceholder.typicode.com',
-  );
+);
   final courseRepository = CourseRepository(courseService);
 
   runApp(

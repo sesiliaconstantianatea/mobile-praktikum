@@ -1,3 +1,4 @@
+import '../widgets/error_view.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/course_provider.dart';
@@ -85,21 +86,35 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
+          
           // List Data Course
           Expanded(
             child: Builder(
               builder: (context) {
                 if (provider.isLoading) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
                 }
+
                 if (provider.error != null) {
-                  return Center(
+                  return ErrorView(
+                    message: provider.error!,
+                      onRetry: () {
+                      context.read<CourseProvider>().loadCourses();
+                    },
+                    );
+                }
+
+                if (provider.courses.isEmpty) {
+                  return const Center(
                     child: Text(
-                      'Terjadi Kesalahan: ${provider.error}',
-                      style: const TextStyle(color: Colors.red),
+                      'Data course belum tersedia',
+                       style: TextStyle(fontSize: 16),
                     ),
                   );
                 }
+
                 return ListView.builder(
                   itemCount: provider.courses.length,
                   itemBuilder: (context, index) {
@@ -110,7 +125,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => CourseDetailScreen(course: course),
+                            builder: (_) =>
+                                CourseDetailScreen(course: course),
                           ),
                         );
                       },
@@ -120,8 +136,3 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
