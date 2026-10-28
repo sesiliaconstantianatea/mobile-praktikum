@@ -1,4 +1,3 @@
-
 import 'package:flutter/foundation.dart';
 
 import '../models/course.dart';
@@ -63,8 +62,7 @@ class CourseProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final createdCourse =
-          await repository.createCourse(course);
+      final createdCourse = await repository.createCourse(course);
 
       await loadCourses();
 
@@ -76,17 +74,18 @@ class CourseProvider extends ChangeNotifier {
   }
 
   // PUT: Memperbarui course yang sudah ada
-  Future<Course> updateCourse(Course course) async {
+  Future<void> updateCourse(Course course) async {
+    if (course.id == null) {
+      throw Exception('ID course tidak boleh kosong saat mengedit');
+    }
+
     _isSaving = true;
     notifyListeners();
 
     try {
-      final updatedCourse =
-          await repository.updateCourse(course);
+      await repository.updateCourse(course.id!, course);
 
       await loadCourses();
-
-      return updatedCourse;
     } finally {
       _isSaving = false;
       notifyListeners();
@@ -99,7 +98,6 @@ class CourseProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Mengirim permintaan DELETE ke API
       await repository.deleteCourse(id);
 
       // Menghapus course dari daftar lokal

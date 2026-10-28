@@ -1,15 +1,16 @@
-
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../models/course.dart';
+import 'course_data_source.dart';
 
-class CourseApiService {
+class CourseApiService implements CourseDataSource {
   final String baseUrl;
 
   CourseApiService(this.baseUrl);
 
   // GET: Mengambil daftar course
+  @override
   Future<List<Course>> getCourses() async {
     final response = await http.get(
       Uri.parse('$baseUrl/posts'),
@@ -37,6 +38,7 @@ class CourseApiService {
   }
 
   // POST: Membuat course baru
+  @override
   Future<Course> createCourse(Course course) async {
     final response = await http.post(
       Uri.parse('$baseUrl/posts'),
@@ -65,32 +67,26 @@ class CourseApiService {
     );
   }
 
-  // PUT: Memperbarui course yang sudah ada
-  Future<Course> updateCourse(Course course) async {
-    if (course.id == null) {
-      throw Exception(
-        'ID course tidak boleh kosong saat mengedit',
-      );
-    }
-
+  // PUT: Memperbarui course
+  @override
+  Future<void> updateCourse(int id, Course course) async {
     final response = await http.put(
-      Uri.parse('$baseUrl/posts/${course.id}'),
+      Uri.parse('$baseUrl/posts/$id'),
       headers: {
         'Content-Type': 'application/json',
       },
       body: jsonEncode(course.toJson()),
     );
 
-    if (response.statusCode == 200) {
-      return course;
+    if (response.statusCode != 200) {
+      throw Exception(
+        'Gagal mengubah course: ${response.statusCode}',
+      );
     }
-
-    throw Exception(
-      'Gagal mengubah course: ${response.statusCode}',
-    );
   }
 
   // DELETE: Menghapus course
+  @override
   Future<void> deleteCourse(int id) async {
     final response = await http.delete(
       Uri.parse('$baseUrl/posts/$id'),
