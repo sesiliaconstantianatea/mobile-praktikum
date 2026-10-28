@@ -92,4 +92,26 @@ class CourseProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  // DELETE: Menghapus course
+  Future<void> deleteCourse(int id, String code) async {
+    _isSaving = true;
+    notifyListeners();
+
+    try {
+      // Mengirim permintaan DELETE ke API
+      await repository.deleteCourse(id);
+
+      // Menghapus course dari daftar lokal
+      _courses.removeWhere((course) => course.id == id);
+
+      // Menghapus favorit jika course yang dihapus merupakan favorit
+      _favoriteCodes.remove(code);
+
+      notifyListeners();
+    } finally {
+      _isSaving = false;
+      notifyListeners();
+    }
+  }
 }

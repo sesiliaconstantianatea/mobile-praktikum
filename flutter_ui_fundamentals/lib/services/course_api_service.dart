@@ -89,4 +89,18 @@ class CourseApiService {
       'Gagal mengubah course: ${response.statusCode}',
     );
   }
+
+  // DELETE: Menghapus course
+  Future<void> deleteCourse(int id) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/posts/$id'),
+    );
+
+    if (response.statusCode < 200 ||
+        response.statusCode >= 300) {
+      throw Exception(
+        'Gagal menghapus course: ${response.statusCode}',
+      );
+    }
+  }
 }

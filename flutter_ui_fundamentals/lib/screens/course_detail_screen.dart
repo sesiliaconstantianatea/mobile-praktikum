@@ -14,10 +14,89 @@ class CourseDetailScreen extends StatelessWidget {
     required this.course,
   });
 
+  Future<void> _deleteCourse(BuildContext context) async {
+    // Pastikan course memiliki ID sebelum menghapus.
+    if (course.id == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Course tidak memiliki ID dan tidak bisa dihapus.'),
+        ),
+      );
+      return;
+    }
+
+    // Menampilkan dialog konfirmasi.
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Hapus Course?'),
+          content: Text(
+            'Apakah kamu yakin ingin menghapus "${course.title}"?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext, false);
+              },
+              child: const Text('Batal'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () {
+                Navigator.pop(dialogContext, true);
+              },
+              child: const Text('Hapus'),
+            ),
+          ],
+        );
+      },
+    );
+
+    // Periksa apakah halaman masih aktif setelah dialog ditutup.
+    if (!context.mounted) return;
+
+    // Batalkan proses jika pengguna memilih Batal.
+    if (confirmed != true) return;
+
+    try {
+      // Memanggil HTTP DELETE melalui Provider.
+      await context.read<CourseProvider>().deleteCourse(
+            course.id!,
+            course.code,
+          );
+
+      // Wajib memeriksa context setelah proses async selesai.
+      if (!context.mounted) return;
+
+      // Kembali ke halaman sebelumnya.
+      Navigator.pop(context);
+
+      // Menampilkan notifikasi penghapusan.
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${course.title} berhasil dihapus.'),
+        ),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal menghapus course: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isFav =
-        context.watch<CourseProvider>().isFavorite(course.code);
+    final provider = context.watch<CourseProvider>();
+    final isFav = provider.isFavorite(course.code);
 
     return Scaffold(
       appBar: AppBar(
@@ -48,6 +127,13 @@ class CourseDetailScreen extends StatelessWidget {
                   .read<CourseProvider>()
                   .toggleFavorite(course.code);
             },
+          ),
+          IconButton(
+            tooltip: 'Hapus Course',
+            icon: const Icon(Icons.delete),
+            onPressed: provider.isSaving
+                ? null
+                : () => _deleteCourse(context),
           ),
         ],
       ),
@@ -93,6 +179,21 @@ class CourseDetailScreen extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: provider.isSaving
+                    ? null
+                    : () => _deleteCourse(context),
+                icon: const Icon(Icons.delete),
+                label: const Text('Hapus Course'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                ),
+              ),
             ),
           ],
         ),
