@@ -7,10 +7,10 @@ Future<void> main() async {
   );
 
   try {
-    final posts = await service.getCourses();
+    final courses = await service.getCourses();
 
-    print('Jumlah data diterima: ${posts.length}');
-    print('Judul data pertama: ${posts.first['title']}');
+    print('Jumlah data diterima: ${courses.length}');
+    print('Judul data pertama: ${courses.first.title}');
   } catch (e) {
     print('Terjadi kesalahan: $e');
   }

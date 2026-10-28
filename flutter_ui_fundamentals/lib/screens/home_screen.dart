@@ -1,8 +1,11 @@
-import '../widgets/error_view.dart';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../providers/course_provider.dart';
+import '../widgets/error_view.dart';
 import '../widgets/course_card.dart';
+import 'add_course_screen.dart';
 import 'course_detail_screen.dart';
 import 'favorites_screen.dart';
 
@@ -20,6 +23,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+
     Future.microtask(() {
       if (mounted) {
         context.read<CourseProvider>().loadCourses();
@@ -36,7 +40,20 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text('Course Explorer v2'),
         actions: [
           IconButton(
+  icon: const Icon(Icons.add),
+  tooltip: 'Tambah Course',
+  onPressed: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const AddCourseScreen(),
+      ),
+    );
+  },
+),
+          IconButton(
             icon: const Icon(Icons.favorite),
+            tooltip: 'Favorit',
             onPressed: () {
               Navigator.push(
                 context,
@@ -50,29 +67,35 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Column(
         children: [
-          // Header Identitas Mahasiswa & Ringkasan
           Card(
             margin: const EdgeInsets.all(16),
             color: Colors.blue.shade50,
             child: Padding(
-              padding: const EdgeInsets.all(12.0),
+              padding: const EdgeInsets.all(12),
               child: Column(
                 children: [
                   Row(
                     children: const [
                       Icon(Icons.person, color: Colors.blue),
                       SizedBox(width: 8),
-                      Text(
-                        '$studentId • $studentName',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                      Expanded(
+                        child: Text(
+                          '$studentId • $studentName',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ],
                   ),
                   const Divider(),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    mainAxisAlignment:
+                        MainAxisAlignment.spaceAround,
                     children: [
-                      Text('Total Course: ${provider.courses.length}'),
+                      Text(
+                        'Total Course: ${provider.courses.length}',
+                      ),
                       Text(
                         'Total Favorit: ${provider.favoriteCount}',
                         style: const TextStyle(
@@ -86,8 +109,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-          
-          // List Data Course
           Expanded(
             child: Builder(
               builder: (context) {
@@ -100,17 +121,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 if (provider.error != null) {
                   return ErrorView(
                     message: provider.error!,
-                      onRetry: () {
+                    onRetry: () {
                       context.read<CourseProvider>().loadCourses();
                     },
-                    );
+                  );
                 }
 
                 if (provider.courses.isEmpty) {
                   return const Center(
                     child: Text(
                       'Data course belum tersedia',
-                       style: TextStyle(fontSize: 16),
+                      style: TextStyle(fontSize: 16),
                     ),
                   );
                 }
@@ -119,6 +140,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   itemCount: provider.courses.length,
                   itemBuilder: (context, index) {
                     final course = provider.courses[index];
+
                     return CourseCard(
                       course: course,
                       onTap: () {
@@ -136,3 +158,8 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
           ),
+        ],
+      ),
+    );
+  }
+}

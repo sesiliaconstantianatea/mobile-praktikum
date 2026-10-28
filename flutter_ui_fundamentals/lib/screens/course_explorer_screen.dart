@@ -1,7 +1,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../providers/course_provider.dart';
+import 'add_course_screen.dart';
 import 'home_tab.dart';
 import 'courses_tab.dart';
 import 'favorites_tab.dart';
@@ -58,6 +60,18 @@ class _CourseExplorerScreenState
       appBar: AppBar(
         title: const Text('Course Explorer v2'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            tooltip: 'Tambah Course',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const AddCourseScreen(),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: 'Reload Data',
