@@ -6,24 +6,26 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'providers/course_provider.dart';
 import 'repositories/course_repository.dart';
 import 'screens/course_explorer_screen.dart';
+import 'services/course_data_source.dart';
 import 'services/course_supabase_service.dart';
+// Untuk menggunakan REST, import CourseApiService dan ubah
+// deklarasi dataSource di bawah.
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Supabase.initialize(
-    // Ganti dengan Project URL yang benar dari dashboard Supabase.
     url: 'https://lgugxoccewaehhsmmsnt.supabase.co',
-    // Gunakan Publishable key milik proyekmu.
     publishableKey: 'sb_publishable_C7DubL61-sRCDPGSEron2w_MvzO1LjU',
   );
 
-  final courseService = CourseSupabaseService();
-  final courseRepository = CourseRepository(courseService);
+  // Data source aktif: Supabase.
+  final CourseDataSource dataSource = CourseSupabaseService();
+  final courseRepository = CourseRepository(dataSource);
 
   runApp(
     ChangeNotifierProvider(
-      create: (_) => CourseProvider(courseRepository),
+      create: (_) => CourseProvider(courseRepository)..loadCourses(),
       child: const MyApp(),
     ),
   );
@@ -36,9 +38,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Course Explorer v2',
+      title: 'Course Data Manager',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
       home: const CourseExplorerScreen(),

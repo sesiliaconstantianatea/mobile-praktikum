@@ -27,17 +27,6 @@ class _CourseExplorerScreenState
   ];
 
   @override
-  void initState() {
-    super.initState();
-
-    Future.microtask(() {
-      if (mounted) {
-        context.read<CourseProvider>().loadCourses();
-      }
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     final isWide = MediaQuery.sizeOf(context).width >= 600;
 
@@ -58,7 +47,7 @@ class _CourseExplorerScreenState
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Course Explorer v2'),
+        title: const Text('Course Data Manager'),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -74,7 +63,7 @@ class _CourseExplorerScreenState
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
-            tooltip: 'Reload Data',
+            tooltip: 'Muat Ulang Data',
             onPressed: () {
               context.read<CourseProvider>().loadCourses();
             },
