@@ -1,72 +1,125 @@
-# Course Explorer v2 - Mobile Architecture & State Management
+# Course Data Manager — Flutter & Supabase
 
 **Mahasiswa:** Sesilia Constantiana Tea  
-**NIM:** 2415051112  
+**NIM:** 2415051112
 
-## Arah Ketergantungan (Dependency Direction)
-Arsitektur aplikasi mengikuti aliran data dan ketergantungan satu arah (*Unidirectional Data Flow*):
-`Presentation Layer (Screens & Widgets)` -> `State Management (Providers)` -> `Domain/Data Layer (Repositories)` -> `Data Source (Services / JSON Assets)`
+## Deskripsi Aplikasi
 
-- **UI Layer** tidak pernah memanggil `rootBundle` atau `jsonDecode` secara langsung.
-- **Service Layer** tidak pernah mengimpor atau memuat pustaka UI (`flutter/material.dart`).
-- **Provider Layer** murni mengelola state dan business logic tanpa menyimpan objek `BuildContext`.
+Course Data Manager adalah aplikasi mobile berbasis Flutter untuk menampilkan dan mengelola data kursus. Aplikasi ini menggunakan Supabase sebagai backend untuk menyimpan dan mengelola data kursus.
 
-## Tanggung Jawab Struktur Folder (`lib/`)
-- `models/`: Mendefinisikan struktur objek data (`Course.fromJson`) dengan tipe data terstruktur.
-- `services/`: Menangani detail teknis pengambilan data mentah dari sumber data (`rootBundle` / REST API / DB).
-- `repositories/`: Menyediakan lapisan abstraksi akses data untuk Provider agar independen dari detail data source.
-- `providers/`: Mengelola state aplikasi (*async state* & *favorites*), mengeksekusi *business logic*, dan memanggil `notifyListeners()`.
-- `screens/`: Menampilkan tata letak halaman utama (*Home*, *Courses*, *Favorites*, *Detail*) dan navigasi.
-- `widgets/`: Menyediakan komponen UI reusable (seperti `CourseCard`) untuk menghindari duplikasi kode.
+Fitur utama:
+- Menampilkan daftar kursus.
+- Melihat detail kursus.
+- Menambahkan kursus baru.
+- Mengubah data kursus.
+- Menghapus kursus.
+- Mengelola daftar favorit.
+- Menangani error saat mengambil atau memproses data.
 
-## Tahap 1 — Dokumentasi REST API
+## Teknologi
 
-### 1. Informasi Endpoint
+- **Flutter & Dart** — pengembangan aplikasi.
+- **Provider** — state management.
+- **Repository Pattern** — abstraksi akses data.
+- **Supabase** — backend dan database.
+- **HTTP & JSON** — latihan integrasi REST API dan penanganan respons.
+- **Flutter Test** — pengujian model, service, dan perilaku aplikasi.
 
-- **Nama API:** JSONPlaceholder
-- **URL Endpoint:** https://jsonplaceholder.typicode.com/posts/1
-- **HTTP Method:** GET
-- **Status Code:** 200 OK
-- **Format Response:** JSON
+## Arsitektur Aplikasi
 
-### 2. Struktur Response JSON
+Alur ketergantungan aplikasi:
 
-Endpoint mengembalikan data berupa satu objek JSON dengan empat field berikut:
+`Screens & Widgets → Provider → Repository → Data Source / Service → Supabase`
 
-| Field | Tipe Data | Keterangan |
-|---|---|---|
-| `userId` | Number | ID pengguna pemilik post |
-| `id` | Number | ID post |
-| `title` | String | Judul post |
-| `body` | String | Isi post |
+Tanggung jawab setiap bagian:
 
-### 3. Contoh Response
+- `models/`: mendefinisikan struktur data kursus.
+- `screens/`: menampilkan halaman dan interaksi pengguna.
+- `widgets/`: menyediakan komponen UI yang dapat digunakan kembali.
+- `providers/`: mengelola state dan logika aplikasi.
+- `repositories/`: memisahkan logika aplikasi dari detail akses data.
+- `services/`: menangani komunikasi dengan Supabase atau REST API.
 
-```json
-{
-  "userId": 1,
-  "id": 1,
-  "title": "sunt aut facere repellat provident occaecati excepturi optio reprehenderit",
-  "body": "quia et suscipit suscipit recusandae consequuntur expedita et cum reprehenderit molestiae ut ut quas totam nostrum rerum est autem sunt rem eveniet architecto"
-}
+## Backend dan Database
+
+Backend menggunakan Supabase. Aplikasi menginisialisasi koneksi melalui `supabase_flutter` dan mengakses data kursus melalui `CourseSupabaseService`.
+
+Dokumentasi skema database tersedia di:
+
+`docs/schema_database_supabase.md`
+
+**Keamanan:** aplikasi klien hanya boleh menggunakan publishable key. Jangan menyimpan `service_role` key, secret key, password database, atau kredensial administratif di dalam aplikasi Flutter atau repositori publik. Terapkan Row Level Security (RLS) dan kebijakan akses yang sesuai pada tabel database.
+
+## Persiapan
+
+Pastikan perangkat pengembangan sudah memiliki:
+
+- Flutter SDK.
+- Dart SDK yang sesuai dengan versi Flutter.
+- Android Studio atau VS Code dengan ekstensi Flutter.
+- Koneksi internet.
+
+## Cara Menjalankan
+
+1. Clone repositori:
+
+   ```bash
+   git clone https://github.com/sesiliaconstantianatea/mobile-praktikum.git
+   ```
+
+2. Masuk ke folder proyek:
+
+   ```bash
+   cd mobile-praktikum
+   ```
+
+3. Unduh dependensi:
+
+   ```bash
+   flutter pub get
+   ```
+
+4. Pastikan konfigurasi Supabase yang diperlukan sudah tersedia.
+
+5. Jalankan aplikasi pada emulator atau perangkat yang terhubung:
+
+   ```bash
+   flutter run
+   ```
+
+## Pengujian
+
+Jalankan seluruh pengujian Flutter dengan perintah:
+
+```bash
+flutter test
 ```
 
-### 4. Hasil Pengamatan
+Pengujian mencakup model kursus, pemetaan JSON, serta skenario error pada layanan API.
 
-Endpoint berhasil dibuka melalui browser dan menampilkan respons dalam format JSON. Method yang digunakan adalah GET untuk mengambil data post berdasarkan ID.
+## Struktur Proyek
 
-JSONPlaceholder merupakan API dummy untuk latihan. Operasi penulisan data disimulasikan dan tidak disimpan secara permanen.
+```text
+lib/
+├── models/
+├── providers/
+├── repositories/
+├── screens/
+├── services/
+└── widgets/
 
-### 5. Bukti Praktikum
+docs/
+└── schema_database_supabase.md
 
-Screenshot respons endpoint disimpan sebagai bukti pengujian API pada Tahap 1.
-Hasil pengujian: Endpoint GET /posts/1 berhasil mengembalikan data JSON dengan status HTTP 200.
+test/
+├── course_api_mapping_test.dart
+├── course_api_permission_test.dart
+├── course_api_service_test.dart
+├── course_api_validation_test.dart
+├── course_model_test.dart
+└── widget_test.dart
+```
 
-### Tahap 2 — HTTP GET
+## Riwayat Praktikum
 
-- Endpoint: `https://jsonplaceholder.typicode.com/posts/1`
-- Method: `GET`
-- Package: `http`
-- Hasil: Berhasil mengambil respons JSON dari API.
-- Data yang ditampilkan: `id`, `title`, dan `body`.
-- Penanganan status: Data diproses saat status HTTP `200`; selain itu, service melempar exception.
+Repositori ini berisi tahapan pengembangan aplikasi, mulai dari pengenalan REST API, pemodelan data, state management, repository pattern, integrasi Supabase, operasi CRUD, hingga penanganan error dan penguatan keamanan dasar.
