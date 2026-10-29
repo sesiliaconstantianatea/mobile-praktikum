@@ -39,7 +39,10 @@ class CourseSupabaseService implements CourseDataSource {
   }
 
   @override
-  Future<void> deleteCourse(int id) {
-    throw UnimplementedError('Belum diterapkan');
+  Future<void> deleteCourse(int id) async {
+    await _supabase
+        .from('courses')
+        .delete()
+        .eq('id', id);
   }
 }

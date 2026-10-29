@@ -31,6 +31,63 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  Future<void> _confirmDelete(
+    BuildContext context,
+    int id,
+    String code,
+    String title,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Konfirmasi Hapus'),
+        content: Text(
+          'Yakin ingin menghapus mata kuliah "$title" ($code)?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(dialogContext, false);
+            },
+            child: const Text('Batal'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(dialogContext, true);
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !context.mounted) return;
+
+    try {
+      await context.read<CourseProvider>().deleteCourse(id, code);
+
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Course "$title" berhasil dihapus'),
+        ),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal menghapus course: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<CourseProvider>();
@@ -40,17 +97,17 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text('Course Explorer v2'),
         actions: [
           IconButton(
-  icon: const Icon(Icons.add),
-  tooltip: 'Tambah Course',
-  onPressed: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const AddCourseScreen(),
-      ),
-    );
-  },
-),
+            icon: const Icon(Icons.add),
+            tooltip: 'Tambah Course',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const AddCourseScreen(),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.favorite),
             tooltip: 'Favorit',
@@ -90,8 +147,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const Divider(),
                   Row(
-                    mainAxisAlignment:
-                        MainAxisAlignment.spaceAround,
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       Text(
                         'Total Course: ${provider.courses.length}',
@@ -141,17 +197,63 @@ class _HomeScreenState extends State<HomeScreen> {
                   itemBuilder: (context, index) {
                     final course = provider.courses[index];
 
-                    return CourseCard(
-                      course: course,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                CourseDetailScreen(course: course),
+                    return Card(
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: CourseCard(
+                              course: course,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        CourseDetailScreen(
+                                      course: course,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
                           ),
-                        );
-                      },
+                          IconButton(
+                            icon: const Icon(
+                              Icons.delete_outline,
+                              color: Colors.red,
+                            ),
+                            tooltip: 'Hapus Course',
+                            onPressed: provider.isSaving
+                                ? null
+                                : () {
+                                    final id = course.id;
+
+                                    if (id == null) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'ID course tidak ditemukan',
+                                          ),
+                                        ),
+                                      );
+                                      return;
+                                    }
+
+                                    _confirmDelete(
+                                      context,
+                                      id,
+                                      course.code,
+                                      course.title,
+                                    );
+                                  },
+                          ),
+                          const SizedBox(width: 8),
+                        ],
+                      ),
                     );
                   },
                 );
