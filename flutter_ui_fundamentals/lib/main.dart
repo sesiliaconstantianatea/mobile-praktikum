@@ -6,19 +6,19 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'providers/course_provider.dart';
 import 'repositories/course_repository.dart';
 import 'screens/course_explorer_screen.dart';
-import 'services/course_api_service.dart';
+import 'services/course_supabase_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Supabase.initialize(
-  url: 'https://lgugxoccewaehhsmmmsnt.supabase.co',
-  publishableKey: 'TEMPEL_PUBLISHABLE_KEY_KAMU_DI_SINI',
-);
+    // Ganti dengan Project URL yang benar dari dashboard Supabase.
+    url: 'https://lgugxoccewaehhsmmsnt.supabase.co',
+    // Gunakan Publishable key milik proyekmu.
+    publishableKey: 'sb_publishable_C7DubL61-sRCDPGSEron2w_MvzO1LjU',
+  );
 
-  const apiBaseUrl = 'https://jsonplaceholder.typicode.com';
-
-  final courseService = CourseApiService(apiBaseUrl);
+  final courseService = CourseSupabaseService();
   final courseRepository = CourseRepository(courseService);
 
   runApp(
