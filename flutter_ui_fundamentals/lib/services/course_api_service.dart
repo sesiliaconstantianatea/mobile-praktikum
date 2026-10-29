@@ -1,4 +1,8 @@
+
+import 'dart:async';
 import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../models/course.dart';
@@ -6,97 +10,203 @@ import 'course_data_source.dart';
 
 class CourseApiService implements CourseDataSource {
   final String baseUrl;
+  final http.Client _client;
 
-  CourseApiService(this.baseUrl);
+  CourseApiService(
+    this.baseUrl, {
+    http.Client? client,
+  }) : _client = client ?? http.Client();
 
-  // GET: Mengambil daftar course
+  Future<http.Response> _request(
+    Future<http.Response> Function() action,
+  ) async {
+    try {
+      return await action().timeout(
+        const Duration(seconds: 15),
+      );
+    } on TimeoutException {
+      throw Exception(
+        'Permintaan timeout. Periksa koneksi internet lalu coba lagi.',
+      );
+    } on http.ClientException {
+      throw Exception(
+        'Tidak dapat terhubung ke server. Periksa koneksi internet.',
+      );
+    } on FormatException {
+      throw Exception(
+        'Format respons server tidak valid.',
+      );
+    }
+  }
+
+  Exception _httpError(String operation, int statusCode) {
+    switch (statusCode) {
+      case 400:
+        return Exception(
+          '$operation: permintaan tidak valid (HTTP 400).',
+        );
+      case 401:
+        return Exception(
+          '$operation: autentikasi diperlukan (HTTP 401).',
+        );
+      case 403:
+        return Exception(
+          '$operation: akses ditolak (HTTP 403).',
+        );
+      case 404:
+        return Exception(
+          '$operation: endpoint tidak ditemukan (HTTP 404). Periksa URL.',
+        );
+      case 409:
+        return Exception(
+          '$operation: terjadi konflik data (HTTP 409).',
+        );
+      case 422:
+        return Exception(
+          '$operation: data ditolak oleh server (HTTP 422).',
+        );
+      default:
+        return Exception(
+          '$operation gagal (HTTP $statusCode).',
+        );
+    }
+  }
+
+  dynamic _decodeJson(String body) {
+    try {
+      return jsonDecode(body);
+    } on FormatException {
+      throw Exception(
+        'JSON mapping error: respons server bukan JSON yang valid.',
+      );
+    }
+  }
+
   @override
   Future<List<Course>> getCourses() async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/posts'),
+    final response = await _request(
+      () => _client.get(Uri.parse('$baseUrl/posts')),
     );
 
     if (response.statusCode != 200) {
+      throw _httpError('Gagal mengambil course', response.statusCode);
+    }
+
+    final data = _decodeJson(response.body);
+
+    if (data is! List) {
       throw Exception(
-        'Gagal mengambil data: ${response.statusCode}',
+        'JSON mapping error: respons daftar course harus berupa List.',
       );
     }
 
-    final data = jsonDecode(response.body) as List<dynamic>;
+    try {
+      return data.map<Course>((item) {
+        if (item is! Map<String, dynamic>) {
+          throw const FormatException(
+            'Item course bukan object JSON.',
+          );
+        }
 
-    return data.map((item) {
-      final post = item as Map<String, dynamic>;
+        final id = item['id'];
+        final title = item['title'];
 
-      return Course(
-        id: post['id'] as int,
-        code: 'API${post['id']}',
-        title: post['title'] as String,
-        credits: 3,
-        status: 'active',
+        if (id is! int || title is! String) {
+          throw const FormatException(
+            'Key id harus int dan title harus String.',
+          );
+        }
+
+        return Course(
+          id: id,
+          code: 'API$id',
+          title: title,
+          credits: 3,
+          status: 'active',
+        );
+      }).toList();
+    } on TypeError catch (e) {
+      throw Exception(
+        'JSON mapping/type error saat membaca course: $e',
       );
-    }).toList();
+    } on FormatException catch (e) {
+      throw Exception(
+        'JSON mapping error: ${e.message}',
+      );
+    }
   }
 
-  // POST: Membuat course baru
   @override
   Future<Course> createCourse(Course course) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/posts'),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode(course.toJson()),
+    final response = await _request(
+      () => _client.post(
+        Uri.parse('$baseUrl/posts'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(course.toJson()),
+      ),
     );
 
-    if (response.statusCode == 200 ||
-        response.statusCode == 201) {
-      final data =
-          jsonDecode(response.body) as Map<String, dynamic>;
+    if (response.statusCode != 200 &&
+        response.statusCode != 201) {
+      throw _httpError('Gagal membuat course', response.statusCode);
+    }
 
-      return Course(
-        id: data['id'] as int?,
-        code: course.code,
-        title: course.title,
-        credits: course.credits,
-        status: course.status,
+    final data = _decodeJson(response.body);
+
+    if (data is! Map<String, dynamic>) {
+      throw Exception(
+        'JSON mapping error: respons course harus berupa object.',
       );
     }
 
-    throw Exception(
-      'Gagal membuat course: ${response.statusCode}',
+    final id = data['id'];
+
+    if (id != null && id is! int) {
+      throw Exception(
+        'JSON mapping error: key id harus berupa int.',
+      );
+    }
+
+    return Course(
+      id: id as int?,
+      code: course.code,
+      title: course.title,
+      credits: course.credits,
+      status: course.status,
     );
   }
 
-  // PUT: Memperbarui course
   @override
   Future<void> updateCourse(int id, Course course) async {
-    final response = await http.put(
-      Uri.parse('$baseUrl/posts/$id'),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode(course.toJson()),
+    final response = await _request(
+      () => _client.put(
+        Uri.parse('$baseUrl/posts/$id'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(course.toJson()),
+      ),
     );
 
     if (response.statusCode != 200) {
-      throw Exception(
-        'Gagal mengubah course: ${response.statusCode}',
-      );
+      throw _httpError('Gagal mengubah course', response.statusCode);
     }
   }
 
-  // DELETE: Menghapus course
   @override
   Future<void> deleteCourse(int id) async {
-    final response = await http.delete(
-      Uri.parse('$baseUrl/posts/$id'),
+    final response = await _request(
+      () => _client.delete(
+        Uri.parse('$baseUrl/posts/$id'),
+      ),
     );
 
     if (response.statusCode < 200 ||
         response.statusCode >= 300) {
-      throw Exception(
-        'Gagal menghapus course: ${response.statusCode}',
-      );
+      throw _httpError('Gagal menghapus course', response.statusCode);
     }
+  }
+
+  @visibleForTesting
+  void close() {
+    _client.close();
   }
 }
