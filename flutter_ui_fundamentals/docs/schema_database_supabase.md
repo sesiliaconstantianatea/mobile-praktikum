@@ -53,3 +53,13 @@ Policy ini mengizinkan pembacaan baris oleh role yang ditentukan, dengan tetap t
 - [x] Hak akses SELECT diperiksa.
 - [x] Policy SELECT terdaftar dan pengaturannya diperiksa.
 - [ ] Pengujian pembacaan data melalui Data API dari Flutter.
+
+### Validasi status
+Kolom `status` dibatasi dengan CHECK constraint:
+- `planned`
+- `active`
+- `done`
+
+### Catatan keamanan RLS
+Policy SELECT dengan kondisi `true` digunakan khusus untuk praktikum.
+Untuk aplikasi produksi, akses data harus dibatasi sesuai kebutuhan dan otorisasi pengguna.
